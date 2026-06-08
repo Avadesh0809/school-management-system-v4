@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Students | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script>
+    Layout.render("students", "Students");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER"])) return;
+      CRUD.mount(root, {
+        title: "Students",
+        resource: 'students',
+        endpoint: "/students",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'admissionNo',label:'Admission #',sortable:true},
+          {key:'fullName',label:'Name',sortable:true},
+          {key:'email',label:'Email'},
+          {key:'className',label:'Class'},
+          {key:'gender',label:'Gender'},
+          {key:'phone',label:'Phone'}
+        ],
+        formFields: [
+          {name:'fullName',label:'Full Name',required:true},
+          {name:'email',label:'Email',type:'email',required:true},
+          {name:'phone',label:'Phone'},
+          {name:'password',label:'Password (create only)',type:'password',placeholder:'min 6 chars; auto-generated if blank'},
+          {name:'admissionNo',label:'Admission No',required:true},
+          {name:'gender',label:'Gender',type:'select',options:[{value:'',label:'-- choose --'},{value:'MALE',label:'Male'},{value:'FEMALE',label:'Female'},{value:'OTHER',label:'Other'}]},
+          {name:'dateOfBirth',label:'Date of Birth',type:'date'},
+          {name:'classId',label:'Class ID',type:'number'},
+          {name:'parentId',label:'Parent ID',type:'number'},
+          {name:'address',label:'Address',type:'textarea'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

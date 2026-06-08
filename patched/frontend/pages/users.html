@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  
+  <script>
+    Layout.render("users", "Users");
+    (function(){
+      const root = document.getElementById('page-content');
+      
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN"])) return;
+      CRUD.mount(root, {
+        title: "Users",
+        resource: 'users',
+        endpoint: "/users",
+        columns: [
+      {key:'id',label:'ID',sortable:true},
+      {key:'username',label:'Username',sortable:true},
+      {key:'fullName',label:'Full Name',sortable:true},
+      {key:'email',label:'Email',sortable:true},
+      {key:'enabled',label:'Status',render:r => r.enabled?'<span class="badge success">Active</span>':'<span class="badge danger">Disabled</span>'}
+    ],
+        formFields: [
+      {name:'username',label:'Username',required:true},
+      {name:'email',label:'Email',type:'email',required:true},
+      {name:'fullName',label:'Full Name',required:true},
+      {name:'password',label:'Password',type:'password',placeholder:'Leave blank to keep current'},
+      {name:'phone',label:'Phone'},
+      {name:'enabled',label:'Active',type:'checkbox',default:true}
+    ],
+        
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10,
+        defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

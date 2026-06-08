@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exams | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script src="../js/parent.js"></script>
+  <script>
+    Layout.render("exams", "Exams");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (window.Permission && Permission.isParent()) {
+        if (window.ParentView && ParentView.exams) { ParentView.exams(root); return; }
+      }
+
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER","STUDENT"])) return;
+      CRUD.mount(root, {
+        title: "Exams",
+        resource: 'exams',
+        endpoint: "/exams",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'name',label:'Name',sortable:true},
+          {key:'academicYear',label:'Year'},
+          {key:'startDate',label:'Start',sortable:true},
+          {key:'endDate',label:'End'}
+        ],
+        formFields: [
+          {name:'name',label:'Exam Name',required:true},
+          {name:'academicYear',label:'Academic Year',required:true,placeholder:'2025-2026'},
+          {name:'startDate',label:'Start Date',type:'date'},
+          {name:'endDate',label:'End Date',type:'date'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

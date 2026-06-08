@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subjects | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script>
+    Layout.render("subjects", "Subjects");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER"])) return;
+      CRUD.mount(root, {
+        title: "Subjects",
+        resource: 'subjects',
+        endpoint: "/subjects",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'code',label:'Code',sortable:true},
+          {key:'name',label:'Name',sortable:true},
+          {key:'className',label:'Class'},
+          {key:'teacherName',label:'Teacher'}
+        ],
+        formFields: [
+          {name:'code',label:'Subject Code',required:true},
+          {name:'name',label:'Subject Name',required:true},
+          {name:'classId',label:'Class ID',type:'number'},
+          {name:'teacherId',label:'Teacher ID',type:'number'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

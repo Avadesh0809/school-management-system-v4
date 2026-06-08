@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parents | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script>
+    Layout.render("parents", "Parents");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN"])) return;
+      CRUD.mount(root, {
+        title: "Parents",
+        resource: 'parents',
+        endpoint: "/parents",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'fullName',label:'Name',sortable:true},
+          {key:'email',label:'Email'},
+          {key:'phone',label:'Phone'},
+          {key:'occupation',label:'Occupation'}
+        ],
+        formFields: [
+          {name:'fullName',label:'Full Name',required:true},
+          {name:'email',label:'Email',type:'email',required:true},
+          {name:'phone',label:'Phone'},
+          {name:'password',label:'Password (create only)',type:'password',placeholder:'min 6 chars; auto-generated if blank'},
+          {name:'occupation',label:'Occupation'},
+          {name:'address',label:'Address',type:'textarea'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

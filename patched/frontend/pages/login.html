@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | School Management System</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="logo">S</div>
+      <h1>Welcome back</h1>
+      <p class="muted">Sign in to your School Management account</p>
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label>Username or Email</label>
+          <input class="input" type="text" name="username" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="input" type="password" name="password" autocomplete="current-password" />
+        </div>
+        <button class="btn btn-block" type="submit" id="login-btn">Sign in</button>
+        <div style="text-align:center; margin-top:14px;">
+          <a href="forgot-password.html" style="font-size:13px;">Forgot password?</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script>
+    if (API.user.getToken()) location.href = 'dashboard.html';
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('login-btn');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!UI.validate(form, {
+        username: [{ required: true, message: 'Username required' }],
+        password: [{ required: true, minLength: 4, message: 'Min 4 characters' }]
+      })) return;
+      const fd = new FormData(form);
+      btn.disabled = true; btn.innerHTML = '<span class="spinner small"></span> Signing in...';
+      try {
+        await API.auth.login(fd.get('username'), fd.get('password'));
+        try { await API.auth.me(); } catch {}
+        UI.toast('Welcome back!', 'success');
+        setTimeout(() => location.href = 'dashboard.html', 300);
+      } catch (err) {
+        UI.toast(err.message || 'Login failed', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Sign in';
+      }
+    });
+  </script>
+</body>
+</html>

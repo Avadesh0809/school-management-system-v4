@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attendance | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script src="../js/parent.js"></script>
+  <script>
+    Layout.render("attendance", "Attendance");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (window.Permission && Permission.isParent()) {
+        if (window.ParentView && ParentView.attendance) { ParentView.attendance(root); return; }
+      }
+
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER","STUDENT","PARENT"])) return;
+      const _isOwn = Permission.isStudent() || Permission.isParent();
+      const _ep = _isOwn ? "/student/me/attendance" : "/attendance";
+      CRUD.mount(root, {
+        title: "Attendance",
+        resource: 'attendance',
+        endpoint: _ep,
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'date',label:'Date',sortable:true},
+          {key:'studentName',label:'Student'},
+          {key:'status',label:'Status',render:r => {
+            const c = r.status==='PRESENT'?'success':r.status==='ABSENT'?'danger':r.status==='LATE'?'warn':'info';
+            return '<span class="badge '+c+'">'+UI.escapeHtml(r.status||'')+'</span>';
+          }},
+          {key:'remarks',label:'Remarks'}
+        ],
+        formFields: [
+          {name:'studentId',label:'Student ID',type:'number',required:true},
+          {name:'date',label:'Date',type:'date',required:true},
+          {name:'status',label:'Status',type:'select',required:true,options:[{value:'PRESENT',label:'Present'},{value:'ABSENT',label:'Absent'},{value:'LATE',label:'Late'},{value:'EXCUSED',label:'Excused'}]},
+          {name:'remarks',label:'Remarks',type:'textarea'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roles | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  
+  <script>
+    Layout.render("roles", "Roles");
+    (function(){
+      const root = document.getElementById('page-content');
+      
+      if (!Layout.requireRoles(["SUPER_ADMIN"])) return;
+      CRUD.mount(root, {
+        title: "Roles",
+        resource: 'roles',
+        endpoint: "/roles",
+        columns: [
+      {key:'id',label:'ID',sortable:true},
+      {key:'name',label:'Name',sortable:true},
+      {key:'description',label:'Description'}
+    ],
+        formFields: [
+      {name:'name',label:'Role Name',required:true,placeholder:'e.g. ADMIN'},
+      {name:'description',label:'Description',type:'textarea'}
+    ],
+        
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10,
+        defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

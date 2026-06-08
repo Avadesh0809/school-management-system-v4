@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Classes | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script>
+    Layout.render("classes", "Classes");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER"])) return;
+      CRUD.mount(root, {
+        title: "Classes",
+        resource: 'classes',
+        endpoint: "/classes",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'name',label:'Name',sortable:true},
+          {key:'section',label:'Section'},
+          {key:'academicYear',label:'Year'},
+          {key:'classTeacherName',label:'Class Teacher'}
+        ],
+        formFields: [
+          {name:'name',label:'Class Name',required:true,placeholder:'e.g. Grade 10'},
+          {name:'section',label:'Section',required:true,placeholder:'A / B / C'},
+          {name:'academicYear',label:'Academic Year',required:true,placeholder:'2025-2026'},
+          {name:'classTeacherId',label:'Class Teacher ID',type:'number'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marks | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script src="../js/parent.js"></script>
+  <script>
+    Layout.render("marks", "Marks");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (window.Permission && Permission.isParent()) {
+        if (window.ParentView && ParentView.marks) { ParentView.marks(root); return; }
+      }
+
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER","STUDENT","PARENT"])) return;
+      const _isOwn = Permission.isStudent() || Permission.isParent();
+      const _ep = _isOwn ? "/student/me/marks" : "/marks";
+      CRUD.mount(root, {
+        title: "Marks",
+        resource: 'marks',
+        endpoint: _ep,
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'studentName',label:'Student'},
+          {key:'subjectName',label:'Subject'},
+          {key:'examName',label:'Exam'},
+          {key:'marksObtained',label:'Marks',sortable:true},
+          {key:'maxMarks',label:'Max'},
+          {key:'grade',label:'Grade'}
+        ],
+        formFields: [
+          {name:'studentId',label:'Student ID',type:'number',required:true},
+          {name:'subjectId',label:'Subject ID',type:'number',required:true},
+          {name:'examId',label:'Exam ID',type:'number',required:true},
+          {name:'marksObtained',label:'Marks Obtained',type:'number',required:true},
+          {name:'maxMarks',label:'Max Marks',type:'number',required:true},
+          {name:'grade',label:'Grade (optional, auto-computed)'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

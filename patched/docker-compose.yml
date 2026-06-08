@@ -1,0 +1,69 @@
+version: "3.9"
+
+# Full-stack School Management System
+#   - MySQL 8     :3306
+#   - Backend     :8080  (Spring Boot + Kotlin)
+#   - Frontend    :80    (Nginx serving static files + proxying /api -> backend)
+#
+# Run:   docker compose up --build
+# Open:  http://localhost          (frontend)
+#        http://localhost/swagger-ui.html  (API docs via nginx proxy)
+#        http://localhost:8080/swagger-ui.html (direct backend)
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sms-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: school_db
+      MYSQL_USER: school
+      MYSQL_PASSWORD: school
+    ports:
+      - "3306:3306"
+    volumes:
+      - sms_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sms-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+      DB_USER: root
+      DB_PASSWORD: root
+      JWT_SECRET: ZmQ4ZjFhYjY1NGM5NDU0ZjkyYjk5MGFmYjA4OGI4M2YyMjk0YzVmZGYxYTY0ZjVmZjE3ZjUyOWE3MWI4YzM0OQ==
+      STORAGE_ROOT: /app/storage
+      MAIL_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - sms_backend_storage:/app/storage
+      - sms_backend_logs:/app/logs
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/nginx/Dockerfile
+    container_name: sms-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  sms_mysql_data:
+  sms_backend_storage:
+  sms_backend_logs:

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assignments | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  <script src="../js/parent.js"></script>
+  <script>
+    Layout.render("assignments", "Assignments");
+    (function(){
+      const root = document.getElementById('page-content');
+      if (window.Permission && Permission.isParent()) {
+        if (window.ParentView && ParentView.assignments) { ParentView.assignments(root); return; }
+      }
+
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","TEACHER","STUDENT"])) return;
+      CRUD.mount(root, {
+        title: "Assignments",
+        resource: 'assignments',
+        endpoint: "/assignments",
+        columns: [
+          {key:'id',label:'ID',sortable:true},
+          {key:'title',label:'Title',sortable:true},
+          {key:'subjectName',label:'Subject'},
+          {key:'teacherName',label:'Teacher'},
+          {key:'dueDate',label:'Due',sortable:true}
+        ],
+        formFields: [
+          {name:'title',label:'Title',required:true},
+          {name:'description',label:'Description',type:'textarea'},
+          {name:'subjectId',label:'Subject ID',type:'number'},
+          {name:'teacherId',label:'Teacher ID',type:'number'},
+          {name:'dueDate',label:'Due Date',type:'date'}
+        ],
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10, defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

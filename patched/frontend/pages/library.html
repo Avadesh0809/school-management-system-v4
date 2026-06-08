@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/crud.js"></script>
+  
+  <script>
+    Layout.render("library", "Library");
+    (function(){
+      const root = document.getElementById('page-content');
+      
+      if (!Layout.requireRoles(["SUPER_ADMIN","ADMIN","LIBRARIAN","TEACHER","STUDENT"])) return;
+      CRUD.mount(root, {
+        title: "Library",
+        resource: 'library',
+        endpoint: "/library/books",
+        columns: [
+      {key:'id',label:'ID',sortable:true},
+      {key:'isbn',label:'ISBN'},
+      {key:'title',label:'Title',sortable:true},
+      {key:'author',label:'Author',sortable:true},
+      {key:'availableCopies',label:'Available'},
+      {key:'totalCopies',label:'Total'}
+    ],
+        formFields: [
+      {name:'isbn',label:'ISBN',required:true},
+      {name:'title',label:'Title',required:true},
+      {name:'author',label:'Author',required:true},
+      {name:'publisher',label:'Publisher'},
+      {name:'category',label:'Category'},
+      {name:'totalCopies',label:'Total Copies',type:'number',required:true},
+      {name:'availableCopies',label:'Available Copies',type:'number',required:true}
+    ],
+        
+        canCreate: true, canEdit: true, canDelete: true,
+        pageSize: 10,
+        defaultSort: 'id'
+      });
+    })();
+  </script>
+</body>
+</html>

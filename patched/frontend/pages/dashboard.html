@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | SMS</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <script src="../js/config.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/ui.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/permissions.js"></script>
+  <script src="../js/charts.js"></script>
+  <script>
+    Layout.render('dashboard', 'Dashboard');
+    (async function () {
+      const root = document.getElementById('page-content');
+      const roles = Layout.userRoles();
+      const isAdmin = roles.some(r => ['SUPER_ADMIN','ADMIN'].includes(r));
+      const isTeacher = roles.includes('TEACHER');
+      const isStudent = roles.includes('STUDENT');
+      const isParent = roles.includes('PARENT');
+
+      root.innerHTML = '<div class="spinner"></div>';
+      let data = {};
+      try {
+        data = await API.get('/dashboard');
+      } catch (e) {
+        UI.toast('Could not load dashboard data: ' + e.message, 'error');
+        data = {};
+      }
+
+      // Stat cards
+      const stats = [];
+      if (isAdmin) {
+        stats.push(
+          { label: 'Total Students', value: data.totalStudents ?? '—', icon:'🎓', cls:'bg-primary' },
+          { label: 'Total Teachers', value: data.totalTeachers ?? '—', icon:'👨‍🏫', cls:'bg-secondary' },
+          { label: 'Total Classes',  value: data.totalClasses  ?? '—', icon:'🏫', cls:'bg-success' },
+          { label: 'Fee Collected',  value: '$' + (data.totalRevenue ?? data.feeCollected ?? 0), icon:'💰', cls:'bg-warning' }
+        );
+      } else if (isTeacher) {
+        stats.push(
+          { label: 'My Classes', value: data.myClasses ?? '—', icon:'🏫', cls:'bg-primary' },
+          { label: 'Today\u2019s Lessons', value: data.todaysClasses ?? '—', icon:'📅', cls:'bg-secondary' },
+          { label: 'Pending Assignments', value: data.pendingAssignments ?? '—', icon:'📄', cls:'bg-warning' },
+          { label: 'Students', value: data.myStudents ?? '—', icon:'🎓', cls:'bg-success' }
+        );
+      } else if (isStudent) {
+        stats.push(
+          { label: 'Attendance %', value: (data.attendancePercent ?? '—') + (data.attendancePercent != null ? '%' : ''), icon:'✅', cls:'bg-success' },
+          { label: 'Pending Assignments', value: data.pendingAssignments ?? '—', icon:'📄', cls:'bg-warning' },
+          { label: 'Avg Marks', value: data.averageMarks ?? '—', icon:'📊', cls:'bg-secondary' },
+          { label: 'Pending Fees', value: '$' + (data.pendingFees ?? 0), icon:'💳', cls:'bg-danger' }
+        );
+      } else if (isParent) {
+        stats.push(
+          { label: 'Children', value: data.children ?? data.totalChildren ?? '—', icon:'👪', cls:'bg-primary' },
+          { label: 'Avg Attendance', value: (data.avgAttendance ?? '—') + (data.avgAttendance != null ? '%' : ''), icon:'✅', cls:'bg-success' },
+          { label: 'Pending Fees', value: '$' + (data.pendingFees ?? 0), icon:'💳', cls:'bg-warning' },
+          { label: 'Notices', value: data.unreadNotices ?? '—', icon:'📢', cls:'bg-secondary' }
+        );
+      } else {
+        stats.push({ label:'Welcome', value: (API.user.get()?.fullName) || 'User', icon:'👋', cls:'bg-primary' });
+      }
+
+      const statsHtml = `<div class="stats-grid">${stats.map(s => `
+        <div class="stat-card">
+          <div><div class="label">${UI.escapeHtml(s.label)}</div><div class="value">${UI.escapeHtml(String(s.value))}</div></div>
+          <div class="icon-circle ${s.cls}">${s.icon}</div>
+        </div>`).join('')}</div>`;
+
+      const chartsHtml = `
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="card-title" style="margin-bottom:10px;">Attendance Overview (Last 7 days)</div>
+            <canvas id="bar1" height="240"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="card-title" style="margin-bottom:10px;">Status Distribution</div>
+            <canvas id="dough1" height="240"></canvas>
+            <div id="legend" style="margin-top:12px; font-size:13px;"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header"><div class="card-title">Recent Activity</div></div>
+          <div id="activity"></div>
+        </div>`;
+
+      root.innerHTML = statsHtml + chartsHtml;
+
+      // Parent-specific: child summaries, upcoming exams, recent notices
+      if (isParent) {
+        const kids = data.childSummaries || [];
+        const upcoming = data.upcomingExams || [];
+        const notices = data.recentNotices || [];
+        const parentHtml = `
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header"><div class="card-title">My Children</div></div>
+            <div class="card-body" style="overflow-x:auto;">
+              ${kids.length ? `<table class="data-table"><thead><tr>
+                <th>Name</th><th>Admission</th><th>Class</th><th>Attendance</th><th>Pending Fees</th><th>Pending Assignments</th>
+              </tr></thead><tbody>
+                ${kids.map(c => `<tr>
+                  <td>${UI.escapeHtml(c.name||'')}</td>
+                  <td>${UI.escapeHtml(c.admissionNo||'')}</td>
+                  <td>${UI.escapeHtml((c.className||'') + (c.section?' - '+c.section:''))}</td>
+                  <td>${(c.attendancePercent||0).toFixed ? c.attendancePercent.toFixed(1) : c.attendancePercent}%</td>
+                  <td>₹${c.pendingFees||0}</td>
+                  <td>${c.pendingAssignments||0}</td>
+                </tr>`).join('')}
+              </tbody></table>` : '<div class="muted">No linked children found. Contact administration.</div>'}
+            </div>
+          </div>
+          <div class="chart-grid" style="margin-top:20px;">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Upcoming Exams</div></div>
+              <div class="card-body">${upcoming.length ? upcoming.map(e =>
+                `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+                  <b>${UI.escapeHtml(e.name||'')}</b>
+                  <div style="font-size:12px;color:var(--muted);">Starts ${UI.escapeHtml(e.startDate||'TBD')}</div>
+                </div>`).join('') : '<div class="muted">No upcoming exams.</div>'}</div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Recent Notices</div></div>
+              <div class="card-body">${notices.length ? notices.map(n =>
+                `<div style="padding:8px 0;border-bottom:1px solid var(--border);">
+                  <b>${UI.escapeHtml(n.title||'')}</b>
+                  <div style="font-size:12px;color:var(--muted);">${UI.escapeHtml(n.publishedOn||'')}</div>
+                </div>`).join('') : '<div class="muted">No notices.</div>'}</div>
+            </div>
+          </div>`;
+        root.insertAdjacentHTML('beforeend', parentHtml);
+      }
+
+
+      // Charts
+      const bar = (data.attendanceByDay && data.attendanceByDay.length) ? data.attendanceByDay
+        : [['Mon',82],['Tue',88],['Wed',91],['Thu',85],['Fri',93],['Sat',75],['Sun',0]].map(([l,v])=>({label:l,value:v}));
+      Charts.bar(document.getElementById('bar1'), bar.map(d => ({ label: d.label || d.day || '', value: d.value || d.count || 0 })));
+
+      const dist = data.statusDistribution || [
+        { label:'Present', value: data.presentCount ?? 70, color:'#16a34a' },
+        { label:'Absent',  value: data.absentCount  ?? 15, color:'#dc2626' },
+        { label:'Late',    value: data.lateCount    ?? 10, color:'#f59e0b' },
+        { label:'Excused', value: data.excusedCount ?? 5,  color:'#0ea5e9' }
+      ];
+      Charts.doughnut(document.getElementById('dough1'), dist);
+      document.getElementById('legend').innerHTML = dist.map(d =>
+        `<div style="display:inline-flex; align-items:center; gap:6px; margin-right:14px;">
+          <span style="width:10px;height:10px;border-radius:2px;background:${d.color||'#4f46e5'};display:inline-block;"></span>
+          ${UI.escapeHtml(d.label)}: <b>${d.value}</b>
+         </div>`).join('');
+
+      const activity = data.recentActivity || data.recentAudits || [];
+      const actEl = document.getElementById('activity');
+      if (!activity.length) {
+        actEl.innerHTML = '<div class="empty-state"><div class="ico">📭</div>No recent activity</div>';
+      } else {
+        actEl.innerHTML = `<table class="data-table"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+          <tbody>${activity.slice(0,8).map(a => `<tr>
+            <td>${UI.escapeHtml(a.timestamp || a.createdAt || '')}</td>
+            <td>${UI.escapeHtml(a.username || a.actor || '')}</td>
+            <td><span class="badge info">${UI.escapeHtml(a.action || a.type || '')}</span></td>
+            <td>${UI.escapeHtml(a.details || a.description || '')}</td>
+          </tr>`).join('')}</tbody></table>`;
+      }
+    })();
+  </script>
+</body>
+</html>
